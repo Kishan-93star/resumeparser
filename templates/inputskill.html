@@ -1,0 +1,344 @@
+{% extends "layout.html" %}
+
+{% block title %}Filter by Skills - Resume Skill Extractor{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Filter by Skills</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <div class="card-body">
+        <h2 class="card-title text-center">Filter Candidates by Skills</h2>
+        
+        <div class="filter-form-container">
+            <form action="{{ url_for('input_skill') }}" method="POST" class="needs-validation" novalidate>
+                <div class="form-description text-center mb-4">
+                    <p>Select skills to find candidates that match your requirements. Candidates must have ALL selected skills to appear in results.</p>
+                </div>
+                
+                <div class="skill-selection-container">
+                    <div class="form-group">
+                        <label for="skill-input" class="form-label">Add Skills</label>
+                        <input type="text" id="skill-input" class="form-control" placeholder="Type a skill and press Enter" data-available-skills='{{ available_skills|tojson }}'>
+                        <div class="form-text">Start typing to see available skills or enter your own.</div>
+                    </div>
+                    
+                    <div id="selected-skills" class="my-3"></div>
+                    <input type="hidden" id="skills-hidden" name="skills" value="[]">
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filter Candidates
+                    </button>
+                    <a href="{{ url_for('ranking') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> View All Candidates
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="filter-tips mt-5">
+            <h4><i class="fas fa-lightbulb"></i> Tips for Effective Filtering</h4>
+            <ul>
+                <li>Be specific with skill names to get more accurate results</li>
+                <li>Consider using broader categories for wider results</li>
+                <li>The filter requires candidates to have ALL selected skills</li>
+                <li>Use the dashboard to see which skills are most common in your candidate pool</li>
+            </ul>
+        </div>
+        
+        <div class="top-skills-section mt-5">
+            <h4><i class="fas fa-star"></i> Popular Skills</h4>
+            <div class="popular-skills">
+                {% for skill in available_skills[:10] %}
+                <span class="badge badge-light skill-tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<style>
+    .filter-form-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .skill-selection-container {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    #selected-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 40px;
+    }
+    
+    #selected-skills .badge {
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    #selected-skills .badge i {
+        cursor: pointer;
+    }
+    
+    .autocomplete-items {
+        position: absolute;
+        border: 1px solid #d4d4d4;
+        border-bottom: none;
+        border-top: none;
+        z-index: 99;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border-radius: 0 0 4px 4px;
+    }
+    
+    .autocomplete-items div {
+        padding: 10px;
+        cursor: pointer;
+        background-color: #fff;
+        border-bottom: 1px solid #d4d4d4;
+    }
+    
+    .autocomplete-items div:hover {
+        background-color: #e9e9e9;
+    }
+    
+    .autocomplete-active {
+        background-color: #4285f4 !important;
+        color: #ffffff;
+    }
+    
+    .filter-tips {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .filter-tips ul {
+        margin-top: 10px;
+        padding-left: 20px;
+    }
+    
+    .filter-tips li {
+        margin-bottom: 8px;
+    }
+    
+    .popular-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .skill-tag {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .skill-tag:hover {
+        background-color: #4285f4;
+        color: white;
+    }
+    
+    .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .my-3 {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+    
+    .mt-5 {
+        margin-top: 3rem;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the skills input
+        const skillInput = document.getElementById('skill-input');
+        const selectedSkillsContainer = document.getElementById('selected-skills');
+        const hiddenInput = document.getElementById('skills-hidden');
+        let selectedSkills = [];
+        
+        // Setup autocomplete
+        if (skillInput) {
+            const availableSkills = JSON.parse(skillInput.dataset.availableSkills || '[]');
+            let currentFocus;
+            
+            // Create autocomplete function
+            skillInput.addEventListener("input", function(e) {
+                let val = this.value;
+                closeAllLists();
+                if (!val) { return false; }
+                currentFocus = -1;
+                
+                const autocompleteList = document.createElement("DIV");
+                autocompleteList.setAttribute("id", "autocomplete-list");
+                autocompleteList.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(autocompleteList);
+                
+                for (let i = 0; i < availableSkills.length; i++) {
+                    if (availableSkills[i].toLowerCase().indexOf(val.toLowerCase()) > -1) {
+                        const itemElement = document.createElement("DIV");
+                        const startIndex = availableSkills[i].toLowerCase().indexOf(val.toLowerCase());
+                        const endIndex = startIndex + val.length;
+                        
+                        itemElement.innerHTML = availableSkills[i].substring(0, startIndex) +
+                            "<strong>" + availableSkills[i].substring(startIndex, endIndex) + "</strong>" +
+                            availableSkills[i].substring(endIndex);
+                        
+                        itemElement.innerHTML += "<input type='hidden' value='" + availableSkills[i] + "'>";
+                        
+                        itemElement.addEventListener("click", function(e) {
+                            skillInput.value = "";
+                            addSkill(this.getElementsByTagName("input")[0].value);
+                            closeAllLists();
+                        });
+                        
+                        autocompleteList.appendChild(itemElement);
+                    }
+                }
+            });
+            
+            // Handle keyboard navigation
+            skillInput.addEventListener("keydown", function(e) {
+                let x = document.getElementById("autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                
+                if (e.keyCode == 40) { // DOWN
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.keyCode == 38) { // UP
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.keyCode == 13) { // ENTER
+                    e.preventDefault();
+                    if (currentFocus > -1) {
+                        if (x) x[currentFocus].click();
+                    } else {
+                        addSkill(this.value);
+                        this.value = "";
+                        closeAllLists();
+                    }
+                }
+            });
+        }
+        
+        // Make popular skill tags clickable
+        const skillTags = document.querySelectorAll('.skill-tag');
+        skillTags.forEach(tag => {
+            tag.addEventListener('click', function() {
+                addSkill(this.textContent.trim());
+            });
+        });
+        
+        // Add skill function
+        function addSkill(skill) {
+            if (!skill || skill.trim() === "") return;
+            skill = skill.trim();
+            
+            // Add skill if not already selected
+            if (!selectedSkills.includes(skill)) {
+                selectedSkills.push(skill);
+                updateHiddenInput();
+                updateSkillsContainer();
+            }
+        }
+        
+        // Remove skill function
+        function removeSkill(skill) {
+            const index = selectedSkills.indexOf(skill);
+            if (index !== -1) {
+                selectedSkills.splice(index, 1);
+                updateHiddenInput();
+                updateSkillsContainer();
+            }
+        }
+        
+        // Update the visual display of selected skills
+        function updateSkillsContainer() {
+            selectedSkillsContainer.innerHTML = "";
+            
+            selectedSkills.forEach(skill => {
+                const badge = document.createElement("span");
+                badge.className = "badge badge-primary";
+                badge.innerHTML = `${skill} <i class="fas fa-times"></i>`;
+                
+                badge.querySelector("i").addEventListener("click", function() {
+                    removeSkill(skill);
+                });
+                
+                selectedSkillsContainer.appendChild(badge);
+            });
+        }
+        
+        // Update the hidden input with JSON
+        function updateHiddenInput() {
+            hiddenInput.value = JSON.stringify(selectedSkills);
+        }
+        
+        // Autocomplete helper functions
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+        
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+        
+        function closeAllLists(elmnt) {
+            const x = document.getElementsByClassName("autocomplete-items");
+            for (let i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != skillInput) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+        
+        // Close autocomplete list when clicking outside
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+    });
+</script>
+{% endblock %}

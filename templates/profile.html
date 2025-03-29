@@ -1,0 +1,315 @@
+{% extends "layout.html" %}
+
+{% block title %}My Profile - Resume Skill Extractor{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">My Profile</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card profile-card fade-in">
+            <div class="card-body text-center">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                
+                <h3 class="profile-name">{{ current_user.username }}</h3>
+                
+                <div class="profile-info">
+                    <p><i class="fas fa-envelope"></i> {{ current_user.email or 'No email provided' }}</p>
+                    <p><i class="fas fa-calendar-alt"></i> Joined {{ current_user.date_joined.strftime('%B %d, %Y') }}</p>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ user_resumes_count }}</span>
+                        <span class="stat-label">Resumes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card fade-in">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab" aria-controls="edit" aria-selected="true">
+                            <i class="fas fa-user-edit"></i> Edit Profile
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">
+                            <i class="fas fa-lock"></i> Change Password
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="profileTabsContent">
+                    <!-- Edit Profile Tab -->
+                    <div class="tab-pane fade show active" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+                        <form method="POST" action="{{ url_for('profile') }}" class="needs-validation" novalidate>
+                            <div class="form-group">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" value="{{ current_user.username }}" disabled>
+                                <div class="form-text">Username cannot be changed</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email or '' }}" placeholder="Enter your email">
+                            </div>
+                            
+                            <div class="form-group text-center mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Change Password Tab -->
+                    <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                        <form method="POST" action="{{ url_for('profile') }}" class="needs-validation" novalidate>
+                            <div class="form-group">
+                                <label for="current_password" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="new_password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
+                                <div class="form-text">Password must be at least 6 characters long</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                            
+                            <div class="form-group text-center mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4 fade-in">
+            <div class="card-body">
+                <h3 class="card-title">Account Actions</h3>
+                
+                <div class="account-actions">
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<style>
+    .col-md-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+    
+    .col-md-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+    }
+    
+    @media (max-width: 768px) {
+        .col-md-4, .col-md-8 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        
+        .col-md-4 {
+            margin-bottom: 20px;
+        }
+    }
+    
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+    
+    .profile-card {
+        margin-bottom: 20px;
+    }
+    
+    .profile-avatar {
+        font-size: 5rem;
+        color: #4285f4;
+        margin-bottom: 20px;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    
+    .profile-info {
+        margin-bottom: 20px;
+    }
+    
+    .profile-info p {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        color: #6c757d;
+    }
+    
+    .profile-stats {
+        display: flex;
+        justify-content: center;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #4285f4;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .nav-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        padding-left: 0;
+        margin-bottom: 0;
+        list-style: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .nav-item {
+        margin-bottom: -1px;
+    }
+    
+    .nav-link {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: #495057;
+        text-decoration: none;
+        background-color: transparent;
+        border: 1px solid transparent;
+        border-top-left-radius: 0.25rem;
+        border-top-right-radius: 0.25rem;
+        cursor: pointer;
+    }
+    
+    .nav-link.active {
+        color: #4285f4;
+        background-color: #fff;
+        border-color: #dee2e6 #dee2e6 #fff;
+    }
+    
+    .tab-content {
+        padding: 20px 0;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+    
+    .tab-pane.show {
+        display: block;
+    }
+    
+    .account-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabs = document.querySelectorAll('.nav-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs and tab panes
+                tabs.forEach(t => t.classList.remove('active'));
+                tabPanes.forEach(p => {
+                    p.classList.remove('show');
+                    p.classList.remove('active');
+                });
+                
+                // Add active class to current tab
+                this.classList.add('active');
+                
+                // Show the corresponding tab pane
+                const tabId = this.getAttribute('data-bs-target').substring(1);
+                const tabPane = document.getElementById(tabId);
+                tabPane.classList.add('show');
+                tabPane.classList.add('active');
+            });
+        });
+        
+        // Password match validation
+        const newPassword = document.getElementById('new_password');
+        const confirmPassword = document.getElementById('confirm_password');
+        
+        if (newPassword && confirmPassword) {
+            confirmPassword.addEventListener('input', function() {
+                if (newPassword.value !== this.value) {
+                    this.setCustomValidity('Passwords do not match');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            newPassword.addEventListener('input', function() {
+                if (this.value !== confirmPassword.value) {
+                    confirmPassword.setCustomValidity('Passwords do not match');
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

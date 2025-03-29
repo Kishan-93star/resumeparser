@@ -1,0 +1,581 @@
+{% extends "layout.html" %}
+
+{% block title %}Candidate Ranking - Resume Skill Extractor{% endblock %}
+
+{% block additional_head %}
+<style>
+    /* Performance optimized styles for ranking page */
+    /* Enhanced DataTables search and pagination styling */
+    .dataTables_wrapper .dataTables_filter input {
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        width: 250px;
+    }
+    
+    .dataTables_wrapper .dataTables_filter input:focus {
+        border-color: #4a89dc;
+        box-shadow: 0 0 0 3px rgba(74, 137, 220, 0.15);
+        outline: none;
+    }
+    
+    /* Style the pagination controls */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        border-radius: 8px;
+        border: none !important;
+        background: none !important;
+        transition: all 0.2s ease;
+        margin: 0 2px;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background-color: #f0f0f0 !important;
+        color: #333 !important;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: linear-gradient(to right, #4a89dc, #5a9de9) !important;
+        color: white !important;
+        border: none !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+        background: linear-gradient(to right, #4a89dc, #5a9de9) !important;
+        color: white !important;
+    }
+    
+    /* Style the length menu */
+    .dataTables_wrapper .dataTables_length select {
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        padding: 5px 10px;
+        background-color: white;
+    }
+    
+    /* Enhanced table styling for better visibility and readability */
+    #candidates-table {
+        /* Mild acceleration that doesn't affect visibility */
+        transform: translateZ(0); /* Still use GPU but with less intensity */
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    /* Improved table header styling */
+    #candidates-table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        padding: 12px 15px;
+        font-weight: 600;
+        color: #495057;
+        position: relative;
+    }
+    
+    /* Add subtle hover effect to table rows */
+    #candidates-table tbody tr:hover {
+        background-color: rgba(0,123,255,0.03);
+    }
+    
+    /* Make table more readable with better padding */
+    #candidates-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+        border-top: 1px solid #f2f2f2;
+    }
+    
+    /* Add zebra striping that's easier on the eyes */
+    #candidates-table tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,0.02);
+    }
+    
+    /* Add distinctive styling for better ranking visibility */
+    .rank-badge {
+        padding: 6px 10px;
+        border-radius: 12px; 
+        font-weight: 700;
+        display: inline-block;
+        min-width: 40px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12); /* Subtle shadow for depth */
+    }
+    
+    .high-rank {
+        background-color: #34a853;
+        color: white;
+    }
+    
+    .medium-rank {
+        background-color: #fbbc05;
+        color: #333;
+    }
+    
+    .low-rank {
+        background-color: #ea4335;
+        color: white;
+    }
+    
+    /* Style for experience badge */
+    .experience-badge {
+        padding: 6px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+        background-color: #4285f4;
+        color: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    
+    /* Vertical scrolling skill tags container - smaller for ranking page */
+    .skill-tags {
+        display: flex;
+        flex-wrap: wrap; /* Allow wrapping to new lines */
+        gap: 4px; /* Reduced gap for tighter packing */
+        padding: 6px 3px;
+        overflow-y: auto; /* Enable vertical scrolling */
+        max-height: 90px; /* Slightly reduced height for more compact display */
+        max-width: 100%;
+        width: 100%; /* Full width within cell */
+        scrollbar-width: thin; /* Firefox */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        scroll-behavior: smooth;
+        align-content: flex-start; /* Start from top when wrapping */
+        position: relative;
+        /* Add shadow to indicate scrollable content */
+        box-shadow: inset 0 -10px 10px -10px rgba(0,0,0,0.05);
+    }
+    
+    /* Custom scrollbar styling for WebKit browsers */
+    .skill-tags::-webkit-scrollbar {
+        width: 5px;
+        background-color: #f8f9fa;
+    }
+    
+    .skill-tags::-webkit-scrollbar-thumb {
+        background-color: #c1c9d0;
+        border-radius: 4px;
+    }
+    
+    .skill-tags::-webkit-scrollbar-thumb:hover {
+        background-color: #a8b2bc;
+    }
+    
+    /* Add a subtle bottom fade to indicate more content */
+    .skill-tags.has-overflow:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.9));
+        pointer-events: none; /* Allow clicking through */
+        opacity: 0.7;
+    }
+    
+    /* Enhanced badge visibility with depth effect - smaller for ranking page */
+    .badge {
+        white-space: nowrap;
+        display: inline-block;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        margin: 2px;
+    }
+    
+    /* Skill badge hover effects */
+    .badge:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+    
+    /* Style skill badges differently than certificate badges */
+    .badge-light {
+        background-color: #f8f9fa;
+        border: 1px solid #e2e6ea;
+        color: #495057;
+    }
+    
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+        font-weight: 500;
+    }
+    
+    /* Optimize chart rendering */
+    .chart-container {
+        height: 400px;
+        transform: translateZ(0); /* Force GPU rendering */
+        will-change: contents; /* Optimize for content changes */
+        contain: size layout; /* Containment for performance */
+    }
+    
+    /* Enhanced action buttons with hover effects */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .action-buttons .btn {
+        border-radius: 8px; 
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    }
+    
+    .action-buttons .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    /* Style the view resume button with a special effect */
+    .action-buttons .btn-primary {
+        background: linear-gradient(to right, #4a89dc, #5a9de9);
+        border: none;
+    }
+    
+    /* Style the delete button with a special effect */
+    .action-buttons .btn-danger {
+        background: linear-gradient(to right, #ea4335, #ff5a5a);
+        border: none;
+    }
+    
+    .selected-skills {
+        margin-bottom: 20px;
+    }
+    
+    .selected-skills .badge {
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+    
+    /* Enhanced export buttons */
+    .export-buttons {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .export-buttons .btn {
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        transition: all 0.2s ease;
+        position: relative;
+        padding: 8px 16px;
+    }
+    
+    .export-buttons .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    
+    .export-buttons .btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Style top control buttons */
+    .batch-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .batch-actions .btn {
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        transition: all 0.2s ease;
+    }
+    
+    .batch-actions .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+    }
+    
+    .top-controls {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+        gap: 15px;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    /* Optimize transitions and animations for smoother UI */
+    .fade-in {
+        animation: none !important; /* Disable fade-in animation to prevent jitter */
+        opacity: 1 !important;
+    }
+    
+    @media (max-width: 768px) {
+        .top-controls {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Candidate Ranking</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <div class="card-body">
+        <h2 class="card-title text-center">Candidate Leaderboard</h2>
+        
+        <div id="alert-container"></div>
+        
+        {% if selected_skills %}
+        <div class="selected-skills">
+            <h4>Filtered by Skills:</h4>
+            {% for skill in selected_skills %}
+                <span class="badge badge-primary">{{ skill }}</span>
+            {% endfor %}
+            <div class="mt-2">
+                <a href="{{ url_for('ranking') }}" class="btn btn-sm btn-outline-primary">Clear Filters</a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="top-controls">
+            <div class="export-buttons">
+                <button id="export-csv" class="btn btn-outline-primary">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button id="export-pdf" class="btn btn-outline-primary">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+                <a href="{{ url_for('manage_skills') }}" class="btn btn-outline-info">
+                    <i class="fas fa-cogs"></i> Manage Skills
+                </a>
+            </div>
+            
+            <div class="batch-actions">
+                <button id="select-all-resumes" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button id="deselect-all-resumes" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-square"></i> Deselect All
+                </button>
+                <button id="delete-selected" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i> Delete Selected
+                </button>
+                <form id="compare-form" action="{{ url_for('compare') }}" method="POST" style="display: inline-block;">
+                    <button id="compare-btn" type="submit" class="btn btn-sm btn-primary" disabled>
+                        <i class="fas fa-exchange-alt"></i> Compare Selected
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        {% if candidates %}
+        <div id="export-content">
+            <div class="chart-container mb-4">
+                <canvas id="skills-chart" data-labels='{{ skill_labels|safe }}' data-values='{{ skill_data|safe }}'></canvas>
+            </div>
+            
+            <div class="table-container">
+                <table id="candidates-table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"></th>
+                            <th>Name</th>
+                            <th>Skills</th>
+                            <th>Certificates</th>
+                            <th>Experience</th>
+                            <th>Rank Score</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in candidates %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="resume_ids" value="{{ candidate.id }}" class="compare-checkbox" form="compare-form">
+                            </td>
+                            <td>{{ candidate.name }}</td>
+                            <td>
+                                <div class="skill-tags">
+                                    {% for skill in candidate.skills %}
+                                        <span class="badge badge-light">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="skill-tags">
+                                    {% if candidate.certificates and candidate.certificates|length > 0 %}
+                                        {% for cert in candidate.certificates %}
+                                            <span class="badge badge-info">{{ cert }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">None found</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if candidate.experience_years is not none %}
+                                    <span class="experience-badge">{{ candidate.experience_years }} years</span>
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if candidate.rank >= 30 %}
+                                    <span class="rank-badge high-rank">{{ candidate.rank }}</span>
+                                {% elif candidate.rank >= 15 %}
+                                    <span class="rank-badge medium-rank">{{ candidate.rank }}</span>
+                                {% else %}
+                                    <span class="rank-badge low-rank">{{ candidate.rank }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ candidate.date }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('serve_resume', filename=candidate.resume) }}" target="_blank" class="btn btn-sm btn-primary" data-toggle="tooltip" data-title="View Resume">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('delete_resume', resume_id=candidate.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" data-toggle="tooltip" data-title="Delete" onclick="return confirm('Are you sure you want to delete this resume?');">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-file-upload fa-5x mb-3" style="color: #ccc;"></i>
+            <h3>No Candidates Found</h3>
+            <p>Upload resumes to see the ranking here.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Upload Resumes</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<!-- DataTables scripts loaded after jQuery with performance optimizations -->
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    // Mark the body as ranking page for CSS optimizations
+    document.body.classList.add('ranking-page');
+    
+    $(document).ready(function() {
+        // Balanced performance and usability DataTables initialization
+        $('#candidates-table').DataTable({
+            responsive: true,
+            
+            // Performance optimizations without virtual scrolling
+            deferRender: false,         // Fully render all rows for better visibility
+            scroller: false,            // Disable virtual scrolling since it's harder to view
+            paging: true,               // Keep standard pagination
+            pageLength: 10,             // Show fewer rows for better readability
+            lengthMenu: [10, 25, 50],   // Let users choose how many rows to show
+            searching: true,            // Keep search functionality
+            stateSave: false,           // Don't save state (faster load times)
+            info: true,                 // Keep table info
+            processing: true,           // Show processing indicator
+            autoWidth: false,           // Prevent column width calculations on each draw
+            
+            // Disable ordering on checkbox and action columns
+            columnDefs: [
+                { orderable: false, targets: [0, 7] },
+                // Add reasonable width constraints
+                { width: "40px", targets: 0 },
+                { width: "15%", targets: 2 },  // Skills column wider 
+                { width: "15%", targets: 3 },  // Certificates column wider
+                { width: "100px", targets: 4 }, // Experience years column
+                { width: "120px", targets: 7 }
+            ],
+            order: [[5, 'desc']],       // Sort by rank by default
+            
+            // Smoother rendering
+            drawCallback: function() {
+                // Add milder hardware acceleration to rendered rows
+                $(this).find('tbody tr').css({
+                    'transform': 'translateZ(0)'
+                });
+            }
+        });
+        
+        // Optimize DOM manipulation operations
+        const checkboxes = document.querySelectorAll('.compare-checkbox');
+        const compareBtn = document.getElementById('compare-btn');
+        
+        // Use event delegation for better performance
+        document.querySelector('#candidates-table').addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('compare-checkbox')) {
+                // Count checked checkboxes
+                const checkedCount = document.querySelectorAll('.compare-checkbox:checked').length;
+                compareBtn.disabled = checkedCount < 2;
+            }
+        });
+        
+        // Add visual indication for vertically scrollable skill containers
+        // Wait for DataTables to complete rendering for reliable measurements
+        $('#candidates-table').on('draw.dt', function() {
+            const skillContainers = document.querySelectorAll('.skill-tags');
+            skillContainers.forEach(function(container) {
+                // Check if vertical scrolling is needed
+                if (container && container.scrollHeight > container.clientHeight) {
+                    // Add 'has-overflow' class to show the bottom fade gradient
+                    container.classList.add('has-overflow');
+                    
+                    // Add a smooth hover transition for better UX
+                    container.addEventListener('mouseenter', function() {
+                        this.style.boxShadow = 'inset 0 -10px 10px -10px rgba(0,0,0,0.12)';
+                        this.style.transition = 'box-shadow 0.3s ease';
+                    });
+                    
+                    container.addEventListener('mouseleave', function() {
+                        this.style.boxShadow = 'inset 0 -10px 10px -10px rgba(0,0,0,0.05)';
+                    });
+                }
+            });
+        });
+        
+        // Also run once on document ready for initial display
+        setTimeout(function() {
+            const skillContainers = document.querySelectorAll('.skill-tags');
+            skillContainers.forEach(function(container) {
+                if (container && container.scrollHeight > container.clientHeight) {
+                    container.classList.add('has-overflow');
+                }
+            });
+        }, 500);
+    });
+</script>
+{% endblock %}
