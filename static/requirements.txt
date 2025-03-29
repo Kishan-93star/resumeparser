@@ -1,0 +1,55 @@
+run this project on your local machine using Anaconda Navigator and VS Code
+
+
+Step 1: Download the Project Files
+Save all the project files to a folder called "ResumeParser" on your computer
+Step 2: Create a New Anaconda Environment
+Open Anaconda Navigator
+Click on "Environments" on the left side
+Click "Create" button at the bottom
+Name it "resume-parser"
+Choose Python 3.9
+Click "Create"
+Step 3: Open Anaconda Terminal
+Click on your new "resume-parser" environment
+Click the play button next to it
+Select "Open Terminal"
+Step 4: Install Required Packages
+In the terminal, type these commands one by one:
+
+pip install flask
+pip install flask-login
+pip install flask-sqlalchemy
+pip install gunicorn
+pip install nltk
+pip install spacy
+pip install pyresparser
+pip install email-validator
+pip install psycopg2-binary
+Step 5: Download Required Data Files
+Still in the terminal, type:
+
+python -m nltk.downloader punkt
+python -m nltk.downloader stopwords
+python -m spacy download en_core_web_sm
+Step 6: Set Up the Database
+In the terminal:
+
+Go to your project folder:
+cd path/to/your/ResumeParser
+Run Python:
+python
+In the Python prompt:
+from app import db
+db.create_all()
+exit()
+Step 7: Start the Application
+In the terminal, make sure you're in the project folder
+Type:
+python main.py
+Wait until you see a message saying the server is running
+Step 8: View the Website
+Open your web browser
+Type "http://127.0.0.1:5000" in the address bar
+Press Enter
+The Resume Parser website should now appear!

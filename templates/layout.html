@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="Cache-Control" content="max-age=3600">
+    <title>{% block title %}Resume Skill Extractor{% endblock %}</title>
+    
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/style.css') }}" as="style">
+    <link rel="preload" href="https://code.jquery.com/jquery-3.6.0.min.js" as="script">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Load only what's needed based on page -->
+    {% if request.endpoint in ['ranking', 'dashboard', 'compare'] %}
+    <!-- Chart.js - only loaded when needed -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    {% endif %}
+    
+    {% if request.endpoint in ['ranking'] %}
+    <!-- DataTables - only loaded when needed -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
+    <!-- HTML2PDF for PDF export - only loaded when needed -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    {% endif %}
+    
+    {% block additional_head %}{% endblock %}
+</head>
+<body class="preload">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container container">
+            <a href="{{ url_for('index') }}" class="navbar-logo">Resume Skill Extractor</a>
+            
+            <div class="navbar-links">
+                <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}"><i class="fas fa-chart-bar"></i> Dashboard</a>
+                <a href="{{ url_for('ranking') }}"><i class="fas fa-trophy"></i> Rankings</a>
+                <a href="{{ url_for('input_skill') }}"><i class="fas fa-filter"></i> Filter Skills</a>
+                <a href="{{ url_for('manage_skills') }}"><i class="fas fa-cogs"></i> Manage Skills</a>
+                <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a>
+                <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About</a>
+                <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                {% endif %}
+            </div>
+            
+            <button class="navbar-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Mobile Navigation -->
+    <div class="navbar-mobile">
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}"><i class="fas fa-chart-bar"></i> Dashboard</a>
+        <a href="{{ url_for('ranking') }}"><i class="fas fa-trophy"></i> Rankings</a>
+        <a href="{{ url_for('input_skill') }}"><i class="fas fa-filter"></i> Filter Skills</a>
+        <a href="{{ url_for('manage_skills') }}"><i class="fas fa-cogs"></i> Manage Skills</a>
+        <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a>
+        <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% else %}
+        <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About</a>
+        <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+        {% endif %}
+    </div>
+    
+    <!-- Flash Messages -->
+    <div class="container" style="margin-top: 80px;">
+        <div id="alert-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade-in">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    
+    <!-- Breadcrumbs -->
+    {% block breadcrumbs %}{% endblock %}
+    
+    <!-- Main Content -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">Resume Skill Extractor</h3>
+                    <p>A powerful tool for recruiters to analyze and rank resumes based on skills.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About Us</a></li>
+                        {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('ranking') }}">Rankings</a></li>
+                        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('manage_skills') }}">Manage Skills</a></li>
+                        {% else %}
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('register') }}">Register</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Stay Connected</h3>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; {{ now.year }} Resume Skill Extractor | Powered by Flask</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Loading Overlay with Progress Indicator -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Processing... Please wait</p>
+        <p class="loading-message">Preparing files...</p>
+    </div>
+    
+    <!-- Essential Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/page-transition.js') }}" defer></script>
+    
+    <!-- Conditional Script Loading -->
+    {% if request.endpoint in ['ranking'] %}
+    <script src="{{ url_for('static', filename='js/export.js') }}" defer></script>
+    {% endif %}
+    
+    {% if request.endpoint in ['index', 'ranking'] %}
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    {% endif %}
+    
+    {% if request.endpoint in ['ranking', 'dashboard'] %}
+    <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+    {% endif %}
+    
+    {% if request.endpoint in ['compare'] %}
+    <script src="{{ url_for('static', filename='js/comparison.js') }}" defer></script>
+    {% endif %}
+    
+    {% block additional_scripts %}{% endblock %}
+</body>
+</html>

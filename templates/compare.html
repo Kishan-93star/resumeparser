@@ -1,0 +1,304 @@
+{% extends "layout.html" %}
+
+{% block title %}Compare Candidates - Resume Skill Extractor{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('ranking') }}">Ranking</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Compare Candidates</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <div class="card-body">
+        <h2 class="card-title text-center">Compare Candidates</h2>
+        
+        <div id="alert-container"></div>
+        
+        {% if resumes %}
+        <div class="compare-actions">
+            <div class="compare-filter">
+                <input type="text" id="skill-filter" class="form-control" placeholder="Filter skills...">
+            </div>
+            
+            <div class="filter-buttons">
+                <button id="filter-common" class="btn btn-sm btn-outline-primary">Show Common Skills</button>
+                <button id="filter-unique" class="btn btn-sm btn-outline-primary">Show Unique Skills</button>
+                <button id="filter-all" class="btn btn-sm btn-outline-primary">Show All Skills</button>
+            </div>
+            
+            <div class="export-buttons">
+                <button id="export-csv" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button id="export-pdf" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+        
+        <!-- Comparison Visualization Section -->
+        <div class="chart-container mb-4">
+            <canvas id="comparison-chart" data-names='{{ resumes|map(attribute="name")|list|tojson }}' data-scores='[
+                {% for resume in resumes %}
+                    [
+                        {% set skills = resume.skills %}
+                        {% for skill in ["Python", "Java", "Machine Learning", "Communication", "Data Science", "SQL"] %}
+                            {{ 1 if skill in skills else 0 }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ]{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]'></canvas>
+        </div>
+        
+        <!-- Skill Comparison Table -->
+        <div class="comparison-table-container">
+            <h3 class="mb-3">Skills Comparison</h3>
+            <table id="skills-compare-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Skill</th>
+                        {% for resume in resumes %}
+                        <th>
+                            {{ resume.name }}
+                            <a href="{{ url_for('serve_resume', filename=resume.resume) }}" target="_blank" class="btn btn-sm btn-primary view-resume-btn">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in skills_comparison_data %}
+                    <tr>
+                        <td>{{ item.skill }}</td>
+                        {% for resume in resumes %}
+                        <td>{{ '✓' if item['resume_' ~ resume.id] else '✗' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Experience Comparison Table -->
+        <div class="comparison-table-container">
+            <h3 class="mb-3">Experience Comparison</h3>
+            <table id="experience-compare-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Experience (Years)</th>
+                        {% for resume in resumes %}
+                        <th>{{ resume.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Work Experience</strong></td>
+                        {% for resume in resumes %}
+                        <td>
+                            {% if resume.experience_years is not none %}
+                                <span class="experience-value">{{ resume.experience_years }} years</span>
+                            {% else %}
+                                <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Certificates Comparison Table -->
+        <div class="comparison-table-container">
+            <h3 class="mb-3">Certificates Comparison</h3>
+            {% if certificates_comparison_data %}
+            <table id="certs-compare-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Certificate</th>
+                        {% for resume in resumes %}
+                        <th>{{ resume.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in certificates_comparison_data %}
+                    <tr>
+                        <td>{{ item.certificate }}</td>
+                        {% for resume in resumes %}
+                        <td>{{ '✓' if item['resume_' ~ resume.id] else '✗' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info">
+                No certificates found in the selected resumes.
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Visual Skill Comparison -->
+        <div id="skill-visualization" data-candidates='{{ resumes|tojson }}' class="mt-5">
+            <h3 class="text-center mb-4">Skill Comparison by Category</h3>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('ranking') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Rankings
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-5x mb-3" style="color: #ccc;"></i>
+            <h3>No Candidates Selected for Comparison</h3>
+            <p>Please select at least two candidates from the ranking page to compare.</p>
+            <a href="{{ url_for('ranking') }}" class="btn btn-primary mt-3">Go to Rankings</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<style>
+    .compare-actions {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+    
+    .compare-filter {
+        flex-grow: 1;
+        max-width: 300px;
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .comparison-table-container {
+        overflow-x: auto;
+        margin-bottom: 30px;
+    }
+    
+    .view-resume-btn {
+        margin-left: 5px;
+        padding: 2px 5px;
+        font-size: 0.7rem;
+    }
+    
+    .has-skill {
+        background-color: rgba(52, 168, 83, 0.2);
+        color: #2c7a47;
+        font-weight: bold;
+    }
+    
+    .no-skill {
+        background-color: rgba(234, 67, 53, 0.1);
+        color: #c53929;
+    }
+    
+    .common-skill {
+        background-color: rgba(52, 168, 83, 0.05);
+    }
+    
+    .unique-skill {
+        background-color: rgba(251, 188, 5, 0.05);
+    }
+    
+    .partial-skill {
+        background-color: rgba(66, 133, 244, 0.05);
+    }
+    
+    .category-scores {
+        margin-top: 20px;
+    }
+    
+    .category-score {
+        margin-bottom: 15px;
+    }
+    
+    .category-name {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+    
+    .progress {
+        height: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 5px;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: #4285f4;
+    }
+    
+    .score-value {
+        text-align: right;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .experience-value {
+        background-color: #4285f4;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-block;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    
+    @media (max-width: 768px) {
+        .compare-actions {
+            flex-direction: column;
+        }
+        
+        .compare-filter {
+            max-width: 100%;
+        }
+    }
+    
+    .chart-container {
+        height: 350px;
+        position: relative;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+    
+    .mt-5 {
+        margin-top: 3rem;
+    }
+    
+    .mb-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .py-5 {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block title %}Error - Resume Skill Extractor{% endblock %}
+
+{% block content %}
+<div class="error-container fade-in">
+    <div class="error-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    
+    <h1 class="error-title">An Error Occurred</h1>
+    
+    <div class="error-message card">
+        <div class="card-body">
+            <p class="error-text">{{ error|default('An unexpected error occurred.') }}</p>
+            
+            <div class="error-details">
+                {% if error is defined and error.endswith('file.') %}
+                <p>Please ensure the resume is a valid PDF or DOCX file. If the issue persists, the resume may contain unusual characters or formatting that are causing the error.</p>
+                {% elif error is defined and error.startswith('Failed to extract') %}
+                <p>The resume parser was unable to extract skills from the uploaded document. This could be due to an uncommon format, poor document quality, or limited text content.</p>
+                {% else %}
+                <p>Something unexpected happened. Please try again or contact support if the issue persists.</p>
+                {% endif %}
+            </div>
+            
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-home"></i> Return to Home
+                </a>
+                
+                <button onclick="history.back()" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<style>
+    .error-container {
+        text-align: center;
+        padding: 60px 20px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .error-icon {
+        font-size: 5rem;
+        color: #ea4335;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    .error-title {
+        font-size: 2.5rem;
+        color: #4285f4;
+        margin-bottom: 20px;
+    }
+    
+    .error-message {
+        margin-bottom: 30px;
+    }
+    
+    .error-text {
+        font-size: 1.2rem;
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+    
+    .error-details {
+        color: #6c757d;
+        margin-bottom: 30px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        text-align: left;
+    }
+    
+    .error-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+</style>
+{% endblock %}

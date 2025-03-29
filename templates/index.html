@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+{# This is the Replit version of the file with safety checks added #}
+
+{% block title %}Resume Skill Extractor - Home{% endblock %}
+
+{% block content %}
+<section class="hero slide-in-down">
+    <h1>Welcome to Resume Skill Extractor</h1>
+    <p>Our advanced tool helps recruiters quickly extract key skills from resumes and rank candidates based on their skillset. Upload resumes, filter by skills, and find the perfect match for your team.</p>
+    
+    {% if current_user.is_authenticated %}
+    <a href="#upload-section" class="btn btn-primary">Upload Resume</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">View Dashboard</a>
+    {% else %}
+    <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Start</a>
+    <a href="{{ url_for('register') }}" class="btn btn-outline-primary">Create Account</a>
+    {% endif %}
+</section>
+
+{% if current_user.is_authenticated %}
+<section id="upload-section" class="fade-in">
+    <div class="card">
+        <h2 class="card-title text-center">Upload Resume</h2>
+        
+        <form id="uploadForm" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <div class="file-upload">
+                <input type="file" id="file-input" name="resume" accept=".pdf, .doc, .docx" multiple required>
+                <label for="file-input" class="file-upload-label">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <span>Drag & drop multiple resume files here or click to browse</span>
+                    <small>Supported formats: PDF, DOC, DOCX</small>
+                </label>
+                <div class="file-names" style="display: none;"></div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload & Extract Skills
+                </button>
+            </div>
+        </form>
+        
+        <div id="result" class="mt-4"></div>
+    </div>
+</section>
+
+<section class="features-section fade-in">
+    <h2 class="text-center mb-4">Features</h2>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-search fa-3x mb-3" style="color: #4285f4;"></i>
+                    <h3 class="card-title">Skill Extraction</h3>
+                    <p class="card-text">Automatically extract skills from resumes using advanced NLP algorithms.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-trophy fa-3x mb-3" style="color: #fbbc05;"></i>
+                    <h3 class="card-title">Candidate Ranking</h3>
+                    <p class="card-text">Rank candidates based on their skills and find the best match for your requirements.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-pie fa-3x mb-3" style="color: #34a853;"></i>
+                    <h3 class="card-title">Skill Analytics</h3>
+                    <p class="card-text">Visualize skill distribution and analyze candidate trends with interactive charts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="features-section fade-in">
+    <h2 class="text-center mb-4">Features</h2>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-search fa-3x mb-3" style="color: #4285f4;"></i>
+                    <h3 class="card-title">Skill Extraction</h3>
+                    <p class="card-text">Automatically extract skills from resumes using advanced NLP algorithms.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-trophy fa-3x mb-3" style="color: #fbbc05;"></i>
+                    <h3 class="card-title">Candidate Ranking</h3>
+                    <p class="card-text">Rank candidates based on their skills and find the best match for your requirements.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-pie fa-3x mb-3" style="color: #34a853;"></i>
+                    <h3 class="card-title">Skill Analytics</h3>
+                    <p class="card-text">Visualize skill distribution and analyze candidate trends with interactive charts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-5">
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Sign Up Now</a>
+    </div>
+</section>
+
+<section class="how-it-works fade-in">
+    <h2 class="text-center mb-4">How It Works</h2>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="step-number">1</div>
+                    <h3 class="card-title">Upload Resume</h3>
+                    <p class="card-text">Upload candidate resumes in PDF, DOC, or DOCX format.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="step-number">2</div>
+                    <h3 class="card-title">Extract Skills</h3>
+                    <p class="card-text">Our AI algorithms automatically extract skills from the resume.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="step-number">3</div>
+                    <h3 class="card-title">Rank Candidates</h3>
+                    <p class="card-text">Candidates are ranked based on skills relevant to your needs.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="step-number">4</div>
+                    <h3 class="card-title">Analyze Results</h3>
+                    <p class="card-text">View detailed analytics and compare top candidates.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block additional_scripts %}
+<style>
+    .step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background-color: #4285f4;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+    }
+    
+    .features-section,
+    .how-it-works {
+        margin-top: 60px;
+        margin-bottom: 60px;
+    }
+    
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+    
+    .col-md-3,
+    .col-md-4 {
+        position: relative;
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+    
+    @media (min-width: 768px) {
+        .col-md-3 {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+        
+        .col-md-4 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+        }
+    }
+    
+    .h-100 {
+        height: 100%!important;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem!important;
+    }
+    
+    .mt-5 {
+        margin-top: 3rem!important;
+    }
+    
+    .mb-3 {
+        margin-bottom: 1rem!important;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem!important;
+    }
+    
+    .text-center {
+        text-align: center!important;
+    }
+</style>
+{% endblock %}

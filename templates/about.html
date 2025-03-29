@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block title %}About Us - Resume Skill Extractor{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">About Us</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+    <div class="card-body">
+        <h2 class="card-title text-center">About Us</h2>
+        
+        <div class="about-content">
+            <div class="about-image text-center mb-4">
+                <i class="fas fa-users fa-5x" style="color: #4285f4;"></i>
+            </div>
+            
+            <p>We are a team of passionate developers dedicated to building innovative tools that simplify the recruitment process. Our Resume Skill Extractor helps recruiters and hiring managers quickly identify relevant skills from resumes, saving time and improving efficiency.</p>
+            
+            <p>With advanced machine learning algorithms, we aim to bridge the gap between job seekers and recruiters by providing fast, accurate, and user-friendly solutions.</p>
+            
+            <h3 class="mt-4">Our Mission</h3>
+            <p>To revolutionize the recruitment process by leveraging artificial intelligence and machine learning to help companies find the right talent faster and more efficiently.</p>
+            
+            <h3 class="mt-4">How It Works</h3>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-upload"></i>
+                        </div>
+                        <h4>Upload</h4>
+                        <p>Upload candidate resumes in PDF, DOC, or DOCX format.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h4>Process</h4>
+                        <p>Our AI algorithms analyze the resume to extract relevant skills and information.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h4>Analyze</h4>
+                        <p>View rankings, compare candidates, and make data-driven decisions.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="mt-4">Technologies We Use</h3>
+            <div class="tech-stack">
+                <span class="badge badge-primary">Python</span>
+                <span class="badge badge-primary">Flask</span>
+                <span class="badge badge-primary">Natural Language Processing</span>
+                <span class="badge badge-primary">Machine Learning</span>
+                <span class="badge badge-primary">SQLAlchemy</span>
+                <span class="badge badge-primary">Chart.js</span>
+                <span class="badge badge-primary">HTML5/CSS3</span>
+                <span class="badge badge-primary">JavaScript</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<style>
+    .about-content {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .feature-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #4285f4;
+        margin-bottom: 15px;
+    }
+    
+    .feature-card h4 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .tech-stack {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .tech-stack .badge {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
